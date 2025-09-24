@@ -27,44 +27,37 @@ public class PlayerController : MonoBehaviour {
         Instance = this;
     }
 
-	void FixedUpdate()
+	private bool jumpPressed = false;
+
+void Update()
+{
+    // Bắt input trong Update
+    if (Input.GetKeyDown(KeyCode.K) || Input.GetMouseButtonDown(0))
     {
-		if (isDead) return;
+        if (isGrounded)
+            jumpPressed = true;
+    }
+}
+
+    void FixedUpdate()
+    {
+        if (isDead) return;
 
         if (isRunning)
         {
-            // Luôn chạy về bên phải
             rb.velocity = new Vector2(moveSpeed, rb.velocity.y);
         }
-		
+
         // Kiểm tra chạm đất
         isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
 
-        // Input nhảy check ngay trong FixedUpdate
-        if (isGrounded && (Input.GetKeyDown(KeyCode.K) || Input.GetMouseButtonDown(0)))
+        // Thực hiện nhảy trong FixedUpdate (sau khi bắt input)
+        if (jumpPressed)
         {
             rb.velocity = new Vector2(rb.velocity.x, 0f); // Reset y velocity
-            rb.AddForce(new Vector2(0f, jumpForce));
+            rb.AddForce(new Vector2(0f, jumpForce), ForceMode2D.Impulse);
+            jumpPressed = false;
         }
-		
-		// Attack (tạm thời log ra console)
-        if (Input.GetKeyDown(KeyCode.J))
-        {
-            Debug.Log("Player Attack!");
-            // anim.SetTrigger("Attack");
-        }
-		
-		// Skill
-		if (Input.GetKeyDown(KeyCode.Alpha1))
-			GetComponent<SkillPowerAttack>().TryUseSkill();
-
-		if (Input.GetKeyDown(KeyCode.Alpha2))
-			GetComponent<SkillDash>().TryUseSkill();
-
-		if (Input.GetKeyDown(KeyCode.Alpha3))
-			GetComponent<SkillFireBreath>().TryUseSkill();
-
-        anim.SetBool("Run", isGrounded && rb.velocity.x > 0 && isRunning);
     }
 
     void OnCollisionEnter2D(Collision2D col)

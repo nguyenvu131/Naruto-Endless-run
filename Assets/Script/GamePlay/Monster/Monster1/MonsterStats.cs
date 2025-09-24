@@ -29,7 +29,7 @@ public class MonsterStats {
 	
 	public float currentDamage = 10;
 	public float currentSpeed = 5; 
-	
+
 	// Particle effect khi quái chết
     public GameObject deathEffectPrefab;
 	
