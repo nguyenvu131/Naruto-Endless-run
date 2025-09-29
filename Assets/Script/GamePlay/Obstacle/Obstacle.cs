@@ -20,7 +20,7 @@ public class Obstacle : MonoBehaviour {
     {
         if (col.CompareTag("Player"))
         {
-            FindObjectOfType<GameManager>().GameOver();
+            //FindObjectOfType<GameManager>().GameOver();
         }
     }
 }

@@ -10,7 +10,7 @@ public class PlayerStatsManager : MonoBehaviour {
 
     // UI References
     [Header("UI References")]
-    // public Slider hpSlider;
+    public Slider hpSlider;
     // public Slider mpSlider;
     // public Slider expSlider;
 
@@ -47,10 +47,10 @@ public class PlayerStatsManager : MonoBehaviour {
     }
 
     public void UpdateAllUI() {
-        // if (hpSlider != null) {
-            // hpSlider.maxValue = playerStats.maxHP;
-            // hpSlider.value = playerStats.currentHP;
-        // }
+        if (hpSlider != null) {
+            hpSlider.maxValue = playerStats.maxHP;
+            hpSlider.value = playerStats.currentHP;
+        }
 
         // if (mpSlider != null) {
             // mpSlider.maxValue = playerStats.maxMP;

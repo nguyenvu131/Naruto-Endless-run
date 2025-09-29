@@ -2,31 +2,37 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class MonsterAttack : MonoBehaviour {
+public class MonsterAttack : Monster {
 
-	public MonsterStats stats;          // Tham chiếu stats của monster
-    public float attackCooldown = 2f;   // Thời gian giữa các lần tấn công
+    public float attackCooldown = 2f;           // Thời gian hồi đòn
     private float lastAttackTime = 0f;
-	
-	public float attackRange = 2f; // phạm vi tấn công
-    public PlayerStats playerStats;     // Tham chiếu player stats
+
+    public float attackRange = 5f;              // Phạm vi bắn
+    public Transform firePoint;                 // Vị trí bắn đạn
+    public GameObject bulletPrefab;             // Prefab đạn quái
+
+    private Transform playerTarget;             // Player để theo dõi
+
+    protected int attackSpeed = 5;
 
     void Start()
     {
         if (stats == null)
-        {
             stats = GetComponent<MonsterStats>();
-        }
+
+        // tìm Player trong scene theo tag
+        GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
+        if (playerObj != null)
+            playerTarget = playerObj.transform;
     }
 
     void Update()
     {
-        if (playerStats == null)
-            return;
+        if (playerTarget == null) return;
 
-        // Kiểm tra khoảng cách tấn công nếu cần
-        float distance = Vector3.Distance(transform.position, playerStatsPosition());
-        if (distance <= 2f) // khoảng cách tấn công
+        float distance = Vector3.Distance(transform.position, playerTarget.position);
+
+        if (distance <= attackRange)
         {
             TryAttack();
         }
@@ -36,36 +42,38 @@ public class MonsterAttack : MonoBehaviour {
     {
         if (Time.time - lastAttackTime >= attackCooldown)
         {
-            AttackPlayer();
+            Shoot();
             lastAttackTime = Time.time;
         }
     }
 
-    void AttackPlayer()
+    void Shoot()
     {
-        if (stats == null || playerStats == null)
+        if (bulletPrefab == null || firePoint == null)
             return;
 
-        // Tính sát thương monster gây ra
-        float damage = stats.CalculateDamage();
+        GameObject bullet = Instantiate(bulletPrefab, firePoint.position, Quaternion.identity);
+        Rigidbody2D rb = bullet.GetComponent<Rigidbody2D>();
 
-        // Gọi Player nhận sát thương
-        playerStats.TakeDamage(damage);
+        if (rb != null && playerTarget != null)
+        {
+            Vector2 dir = (playerTarget.position - firePoint.position).normalized;
+            rb.velocity = dir * attackSpeed; // attackSpeed dùng làm tốc độ bay đạn
+        }
 
-        Debug.Log(stats.monsterName + " attacked Player for " + damage + " damage!");
+        // Gán damage cho bullet
+        MonsterBullet bulletScript = bullet.GetComponent<MonsterBullet>();
+        if (bulletScript != null)
+        {
+            bulletScript.damage = stats.CalculateDamage();
+        }
+
+        Debug.Log(stats.monsterName + " bắn đạn!");
     }
 
-    // Hàm giả lập vị trí player
-    Vector3 playerStatsPosition()
-    {
-        // Trong prototype, giả lập tại origin
-        return Vector3.zero;
-    }
-	
-	// ===================== Gizmos =====================
+    // ===================== Vẽ Gizmos =====================
     private void OnDrawGizmosSelected()
     {
-        // Màu sắc bán kính tấn công
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, attackRange);
     }

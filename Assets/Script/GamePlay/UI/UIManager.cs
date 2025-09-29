@@ -11,7 +11,9 @@ public class UIManager : MonoBehaviour {
     public GameObject gameOverPanel;
     public Text finalScoreText;
     public Text highScoreText;
-
+	
+	public GameObject victoryPanel;
+	
     void Awake()
     {
         if (instance == null) instance = this;
@@ -27,5 +29,11 @@ public class UIManager : MonoBehaviour {
         gameOverPanel.SetActive(true);
         finalScoreText.text = "Score: " + score;
         highScoreText.text = "Highscore: " + highScore;
+    }
+	
+	public void ShowVictoryPanel()
+    {
+        if (victoryPanel != null)
+            victoryPanel.SetActive(true);
     }
 }

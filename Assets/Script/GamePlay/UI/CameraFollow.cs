@@ -4,22 +4,24 @@ using UnityEngine;
 
 public class CameraFollow : MonoBehaviour {
 
-	public Transform target;       // Player cần theo dõi
-    public float smoothSpeed = 5f; // Tốc độ mượt
-    public Vector3 offset;         // Khoảng cách giữa Camera và Player
+	public Transform target;       // Nhân vật (Player) cần follow
+    public float smoothSpeed = 0.125f; // Độ mượt khi camera di chuyển
+    public Vector3 offset;         // Khoảng cách lệch giữa camera và nhân vật
 
-    private void LateUpdate()
+    void LateUpdate()
     {
         if (target == null) return;
 
-        // Camera chỉ follow theo trục X (endless run ngang)
-        Vector3 desiredPosition = new Vector3(target.position.x + offset.x,
-                                              transform.position.y,
-                                              transform.position.z);
+        // Lấy vị trí mong muốn theo nhân vật
+        Vector3 desiredPosition = target.position + offset;
 
-        // Lerp cho mượt
-        Vector3 smoothedPosition = Vector3.Lerp(transform.position, desiredPosition, smoothSpeed * Time.deltaTime);
+        // Giữ nguyên trục Z của camera (không thay đổi)
+        desiredPosition.z = transform.position.z;
 
+        // Nội suy mượt
+        Vector3 smoothedPosition = Vector3.Lerp(transform.position, desiredPosition, smoothSpeed);
+
+        // Gán vị trí mới cho camera
         transform.position = smoothedPosition;
     }
 }

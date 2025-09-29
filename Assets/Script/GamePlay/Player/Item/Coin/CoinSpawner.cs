@@ -19,7 +19,7 @@ public class CoinSpawner : MonoBehaviour {
         {
             yield return new WaitForSeconds(spawnInterval);
 
-            Vector3 pos = spawnPoint.position + new Vector3(0, Random.Range(-1f, 2f), 0);
+            Vector3 pos = spawnPoint.position + new Vector3(0, Random.Range(1f, 2f), 0);
             Instantiate(coinPrefab, pos, Quaternion.identity);
         }
     }

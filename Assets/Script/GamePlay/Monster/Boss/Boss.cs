@@ -1,80 +1,77 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
-public class Boss : MonoBehaviour {
-	
+public class Boss : MonoBehaviour
+{
+
+    [Header("Data SO")]
+    public BossStatsSO statsSo;
 	public BossStats stats;
 	
-	public int maxHP = 50;
     private float currentHP;
 
+    [Header("Attack")]
     public GameObject projectilePrefab;
     public Transform firePoint;
-    public float attackRate = 2f;
     private float nextAttack;
-	
-	public float attackRange = 1f; // phạm vi tấn công
+
     void Start()
     {
-        currentHP = maxHP;
+        if (statsSo != null)
+        {
+            currentHP = statsSo.maxHealth;
+        }
+        else
+        {
+            Debug.LogError("BossStatsSO chưa được gán!");
+            currentHP = 100f; // fallback
+        }
     }
 
     void Update()
     {
+        if (statsSo == null) return;
+
         if (Time.time > nextAttack)
         {
-            nextAttack = Time.time + attackRate;
+            nextAttack = Time.time + statsSo.attackSpeed;
             Attack();
         }
     }
 
     void Attack()
     {
-        // Instantiate(projectilePrefab, firePoint.position, Quaternion.identity);
-		if(projectilePrefab != null && firePoint != null)
-		{
-			GameObject bullet = Instantiate(projectilePrefab, firePoint.position, firePoint.rotation) as GameObject;
-			
-			// Set damage từ BossStats
-			BossBullet bb = bullet.GetComponent<BossBullet>();
-			if(bb != null)
-			{
-				bb.damage = stats.damage;
-			}
-		}
+        if (projectilePrefab != null && firePoint != null)
+        {
+            GameObject bullet = Instantiate(projectilePrefab, firePoint.position, firePoint.rotation) as GameObject;
+
+            // Set damage từ BossStatsSO
+            BossBullet bb = bullet.GetComponent<BossBullet>();
+            if (bb != null)
+            {
+                bb.damage = statsSo.attackPower;
+            }
+        }
     }
 
-    // public void TakeDamage(int damage)
-    // {
-        // currentHP -= damage;
-        // if (currentHP <= 0)
-        // {
-            // Die();
-        // }
-    // }
-	
-	/// <summary>
+    /// <summary>
     /// Boss nhận sát thương từ player
     /// </summary>
-    /// <param name="incomingDamage">Damage gốc từ player</param>
     public void TakeDamage(float incomingDamage)
     {
-        // Dodge, Critical, hoặc các hiệu ứng khác có thể thêm sau
+        if (statsSo == null) return;
 
-        // Công thức giáp tuyến tính:
-        // Mỗi point armor giảm một lượng damage nhất định
-        float armorMultiplier = 0.5f; // 1 point armor giảm 0.5 damage
-        float damageTaken = Mathf.Max(1f, incomingDamage - stats.armor * armorMultiplier);
-
-        // Nếu muốn dùng công thức phần trăm:
-        // float damageTaken = incomingDamage * 100f / (100f + stats.armor);
+        // Công thức giáp tuyến tính
+        float armorMultiplier = 0.5f; // 1 point defense giảm 0.5 damage
+        float damageTaken = Mathf.Max(1f, incomingDamage - statsSo.defense * armorMultiplier);
 
         currentHP -= damageTaken;
 
-        Debug.Log(stats.bossName + " took " + damageTaken + " damage. Current HP: " + currentHP);
+        Debug.Log(statsSo.bossName + " took " + damageTaken + " damage. Current HP: " + currentHP);
 
-        if(currentHP <= 0f)
+        if (currentHP <= 0f)
         {
             Die();
         }
@@ -82,34 +79,60 @@ public class Boss : MonoBehaviour {
 
     void Die()
     {
-        Debug.Log(stats.bossName + " died! EXP: " + stats.expReward + " | Coins: " + stats.coinReward);
-        FindObjectOfType<GameManager>().AddCoin(50); // Thưởng lớn
-		
-		// Rơi item drop
-        if(stats.dropItems != null && stats.dropItems.Length > 0)
+        Debug.Log(statsSo.bossName + " died! EXP: " + statsSo.expReward + " | Gold: " + statsSo.goldReward);
+
+        // Add vàng cho Player/Manager
+        GameManager gm = FindObjectOfType<GameManager>();
+        if (gm != null)
         {
-            int randomIndex = Random.Range(0, stats.dropItems.Length);
-            GameObject drop = Instantiate(stats.dropItems[randomIndex], transform.position, Quaternion.identity) as GameObject;
-            // Optional: tự hủy sau X giây
-            Destroy(drop, 5f);
+            gm.AddCoin(statsSo.goldReward);
         }
-		// TODO: Gọi Player nhận EXP/Coins
+
+        // Rơi item drop
+        if (statsSo.dropItems != null && statsSo.dropItems.Length > 0)
+        {
+            int randomIndex = Random.Range(0, statsSo.dropItems.Length);
+            string itemName = statsSo.dropItems[randomIndex];
+
+            // Ở đây mình giả sử bạn có hệ thống ItemSpawner hoặc prefab theo tên
+            Debug.Log("Drop item: " + itemName);
+        }
+
+        // UI Victory
+        if (UIManager.instance != null)
+        {
+            UIManager.instance.ShowVictoryPanel();
+        }
+
+        // Sau 3 giây thì chuyển scene
+        Invoke("GoToNextScene", 3f);
+
         Destroy(gameObject);
     }
-	
-	/// <summary>
-    /// Boss tấn công player
+
+    void GoToNextScene()
+    {
+        SceneManager.LoadScene("VictoryScene");
+    }
+
+    /// <summary>
+    /// Boss tấn công player → return damage
     /// </summary>
     public float DealDamage()
     {
-        // Đây là sát thương cơ bản
-        return stats.damage;
+        return statsSo != null ? statsSo.attackPower : 10f;
     }
-	
-	private void OnDrawGizmosSelected()
+
+    private void OnDrawGizmosSelected()
     {
-        // Màu sắc bán kính tấn công
+        if (statsSo == null) return;
+
         Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, attackRange);
+        Gizmos.DrawWireSphere(transform.position, statsSo.attackRange);
+    }
+    
+    public float GetCurrentHP()
+    {
+        return currentHP;
     }
 }

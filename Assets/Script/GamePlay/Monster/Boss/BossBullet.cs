@@ -37,15 +37,18 @@ public class BossBullet : MonoBehaviour {
 
     void OnTriggerEnter2D(Collider2D other)
     {
-        PlayerStats player = other.GetComponent<PlayerStats>();
-        if(player != null)
-        {
-            player.TakeDamage(damage);
-            Destroy(gameObject);
-            return;
-        }
 
-        if(other.tag == "Obstacle")
+		if (other.CompareTag("Player"))
+        {
+            Player stats = other.GetComponent<Player>();
+            if (stats != null)
+            {
+                stats.TakeDamage(damage);
+                Debug.Log("Player nhan! Damage: " + damage);
+            }
+            Destroy(gameObject);
+        }
+		else if (other.CompareTag("Obstacle"))
         {
             Destroy(gameObject);
         }
